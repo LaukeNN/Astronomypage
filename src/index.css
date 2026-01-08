@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@theme {
+  --color-deep-space-black: #0a0b1e;
+  --color-navy-blue: #1c2242;
+  --color-starlight-gold: #f4d06f;
+  --color-electric-cyan: #00ffff;
+
+  --font-sans: 'Outfit', sans-serif;
+
+  --background-image-stars: url('https://www.transparenttextures.com/patterns/stardust.png');
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 100px;
+  /* Offset for smooth scrolling with fixed navbar */
+}
+
+body {
+  @apply bg-deep-space-black text-gray-100 font-sans;
+}
+
+/* Custom scrollbar for deep space feel */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0b1e;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1c2242;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #f4d06f;
+}

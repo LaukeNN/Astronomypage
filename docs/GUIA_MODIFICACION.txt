@@ -1,0 +1,66 @@
+GUÍA DE MODIFICACIÓN - CIELO ABIERTO
+======================================
+
+Esta guía explica cómo modificar los textos, imágenes e información de tu página web "Cielo Abierto".
+
+ARCHIVOS PRINCIPALES
+--------------------
+La página está construida con "Componentes". Cada sección de la página es un archivo separado en la carpeta `src/components/`.
+
+1. NAVBAR (Barra de Menú)
+   - Archivo: `src/components/Navbar.jsx`
+   - Modificar enlaces y nombre de la marca.
+
+2. HERO (Imagen Principal)
+   - Archivo: `src/components/Hero.jsx`
+   - Modificar el título, subtítulo (Descubre los secretos...) y botones.
+
+3. NOTICIAS (News)
+   - Archivo: `src/components/News.jsx`
+   - IMPORTANTE: Las noticias se cargan AUTOMÁTICAMENTE desde internet (apspaceflightnewsapi.net).
+   - Si deseas cambiar a noticias manuales, deberás editar este archivo y eliminar la parte de "fetch" para poner tus propios textos.
+
+4. EVENTOS (Calendario)
+   - Archivo: `src/components/Events.jsx`
+   - Busca la lista llamada `events`.
+   - Modificar: `title`, `date`, `location`, `time`, `slots`.
+   - Ejemplo:
+     {
+       title: "Tu Nuevo Evento",
+       date: { day: "20", month: "ENE" },
+       ...
+     }
+
+5. GALERÍA (Imágenes)
+   - Archivo: `src/components/Gallery.jsx`
+   - Busca la lista `photos`.
+   - Cambia las URLs en `src`. Puedes usar enlaces de imágenes de internet o imágenes locales.
+   - Si usas imágenes locales, ponlas en la carpeta `public/` y usa la ruta `/nombre-imagen.jpg`.
+
+6. CONTACTO (Formulario)
+   - Archivo: `src/components/Contact.jsx`
+   - Modificar textos del formulario y correo de destino (actualmente es solo visual).
+
+CÓMO CAMBIAR IMÁGENES
+---------------------
+1. Busca la imagen que quieres usar en internet. Copia su "Dirección de imagen" (debe terminar en .jpg o .png).
+2. Abre el archivo del componente correspondiente (ej. `src/components/Gallery.jsx`).
+3. Reemplaza la URL que hay entre comillas 'https://...' por la nueva.
+
+COLORES (AVANZADO)
+------------------
+Los colores están definidos en `src/index.css`.
+- --color-deep-space-black: Fondo principal.
+- --color-starlight-gold: Dorado de botones/iconos.
+- --color-electric-cyan: Azul brillante de acentos.
+
+Si cambias estos códigos hexadecimales (#...), cambiarán en toda la página.
+
+NOTA SOBRE EL CHATBOT
+---------------------
+El chatbot "AstroGuía" (`src/components/Chatbot.jsx`) tiene respuestas pre-programadas. No es una IA real conectada a una base de datos compleja.
+Para agregar más preguntas/respuestas, edita la función `generateResponse` en ese archivo.
+Ejemplo:
+   if (lowerText.includes('precio')) {
+      return "Nuestras expediciones parten desde $50 USD.";
+   }
