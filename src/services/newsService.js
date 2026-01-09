@@ -34,6 +34,15 @@ export const fetchSpaceNews = async () => {
             image: "https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?q=80&w=1000&auto=format&fit=crop",
             source: "National Geographic",
             url: "https://www.nationalgeographic.com/science/space"
+        },
+        {
+            id: 4,
+            title: "Descubrimiento de Exoplaneta en Zona Habitable",
+            date: new Date(Date.now() - 259200000).toISOString(),
+            excerpt: "Astrónomos identifican un nuevo exoplaneta con condiciones similares a la Tierra orbitando una enana roja cercana.",
+            image: "https://images.unsplash.com/photo-1545156521-77bd85671d30?q=80&w=1000&auto=format&fit=crop",
+            source: "ESO",
+            url: "https://www.eso.org/public/"
         }
     ];
 };

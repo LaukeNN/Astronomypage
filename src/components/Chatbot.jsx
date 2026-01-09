@@ -3,8 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { astronomyQA, pageInfo } from '../data/knowledgeBase';
-import { db } from '../lib/db';
+
 
 const Chatbot = () => {
     const [isOpen, setIsOpen] = useState(false);

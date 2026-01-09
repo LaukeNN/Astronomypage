@@ -1,9 +1,8 @@
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { db } from "./db";
 import { pageInfo } from "../data/knowledgeBase";
 
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || "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";
 
 // Fallback/Simulation Knowledge Base if no API Key
 const SIMULATED_RESPONSES = [
@@ -32,12 +31,9 @@ const SIMULATED_RESPONSES = [
 export const chatWithAI = async (message, history = []) => {
     try {
         // 1. Check for real API Key
-        // Detect if the key is missing or is the default placeholder
-        const isPlaceholder = !API_KEY || API_KEY.includes("PON_TU_API_KEY");
+        const isPlaceholder = !API_KEY || API_KEY.includes("PON_TU_API_KEY") || API_KEY.length < 10;
 
         if (!isPlaceholder) {
-            const genAI = new GoogleGenerativeAI(API_KEY);
-
             // Fetch dynamic context data
             let events = [];
             try {
@@ -52,78 +48,83 @@ export const chatWithAI = async (message, history = []) => {
 
             const pageContext = pageInfo.map(qa => `- ${qa.answer}`).join("\n");
 
-            const systemContext = `
-            CONTEXTO DE LA PÁGINA:
-            Eventos Próximos:
+            const systemPrompt = `Eres AstroGuía, el asistente IA oficial de "Cielo Abierto".
+
+            PERSONALIDAD Y FORMATO:
+            - CONCISO: Tus respuestas deben ser breves (máximo 2-3 oraciones o viñetas cortos). Ve al grano.
+            - FORMATO: Escribe SIEMPRE en oraciones separadas o listas con viñetas para facilitar la lectura inmediata. No uses párrafos largos.
+            - CURIOSO: Usa un tono entusiasta pero profesional.
+            - IDIOMA: Español.
+
+            TU MISIÓN:
+            1. PREGUNTAS DE ASTRONOMÍA: Responde con datos precisos pero resumidos. Si es algo complejo, da el dato clave y pregunta si quieren saber más detalles.
+            2. SOBRE LA PÁGINA: Guía a los usuarios a la sección correcta (Eventos, Contacto, etc.).
+            
+            CONTEXTO DE EVENTOS (Usa esta info):
             ${eventsContext}
 
-            Información General:
+            INFORMACIÓN GENERAL:
             ${pageContext}
-            Pago: Aceptamos PayPal para las reservas.
-            Contacto: Formulario en la web o contacto@cieloabierto.com.
-            `;
+            Pago: PayPal.
+            
+            IMPORTANTE: No inventes eventos. Si no sabes, dilo brevemente y sugiere contactar a soporte (alvarogarciamaxwell@gmail.com).`;
 
-            // Updated to use gemini-1.5-flash which is generally faster and newer, or gemini-pro if preferred.
-            // Using gemini-1.5-flash as it is optimized for high-frequency low-latency tasks.
-            const model = genAI.getGenerativeModel({
-                model: "gemini-1.5-flash",
-                systemInstruction: `Eres AstroGuía, un asistente IA experto en astronomía y física integrado en la página web "Cielo Abierto". 
-                
-                TU PERSONALIDAD:
-                - Amable, curiosa y precisa.
-                - Te encanta enseñar sobre el universo.
-                - Respondes siempre en español.
-                
-                TU CONOCIMIENTO:
-                1. ASTRONOMÍA Y FÍSICA: Tienes libertad total (100% abierto) para responder cualquier duda científica, desde el Big Bang hasta mecánica cuántica, curiosidades de planetas, etc. Explícate de forma clara pero rigurosa.
-                2. INFORMACIÓN DE LA PÁGINA: Usa el siguiente CONTEXTO para responder dudas sobre eventos, precios, ubicación y contacto NO inventes eventos que no estén en la lista.
-                
-                ${systemContext}
-                
-                Si te preguntan cómo agendar: "Ve a la sección Eventos y haz clic en Reservar en el evento que te interese".
-                Si preguntan por pagos: "Aceptamos PayPal".
-                `
-            });
-
-            const chat = model.startChat({
-                history: history.filter(h => h.sender !== 'system').map(h => ({
-                    role: h.sender === 'bot' ? 'model' : 'user',
-                    parts: [{ text: h.text }]
+            // Map history to OpenRouter/OpenAI format
+            const messages = [
+                { role: "system", content: systemPrompt },
+                ...history.filter(h => h.id !== 1).map(h => ({
+                    role: h.sender === 'bot' ? 'assistant' : 'user',
+                    content: h.text
                 })),
+                { role: "user", content: message }
+            ];
+
+            const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${API_KEY}`,
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": window.location.origin, // Required by OpenRouter
+                    "X-Title": "Cielo Abierto Astronomy Web", // Optional
+                },
+                body: JSON.stringify({
+                    "model": "xiaomi/mimo-v2-flash:free",
+                    "messages": messages,
+                    "temperature": 0.7
+                })
             });
 
-            const result = await chat.sendMessage(message);
-            const response = await result.response;
-            return response.text();
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error?.message || "Error al conectar con OpenRouter");
+            }
+
+            const data = await response.json();
+            return data.choices[0].message.content;
         }
 
         // 2. Fallback / Warning if No Key
-        console.warn("Gemini API Key missing or invalid. Using simulation.");
+        console.warn("OpenRouter API Key missing or invalid. Using simulation.");
 
-        // Return a special message if it looks like they wanted real AI but haven't configured it
-        if (message.toLowerCase().includes("gemini") || message.toLowerCase().includes("api")) {
-            return "Para conectarme con mi cerebro positrónico (Gemini), necesitas configurar la API KEY en el archivo .env. ¡Búscalo en la carpeta del proyecto!";
+        if (message.toLowerCase().includes("api") || message.toLowerCase().includes("openrouter")) {
+            return "Para conectarme con mi red neuronal completa via OpenRouter, necesitas configurar la API Key.";
         }
 
-        // 3. Simulation Logic (unchanged or enhanced)
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Network delay
-
+        // 3. Simulation Logic
+        await new Promise(resolve => setTimeout(resolve, 1000));
         const lowerMsg = message.toLowerCase();
 
-        // Context Awareness Check (Simulated)
         if (lowerMsg.includes("lanzamiento") && lowerMsg.includes("spacex")) {
-            return "¡Oh! El lanzamiento de SpaceX es un evento emocionante. El Starship Flight 6 está programado para enero. Puedes ver los detalles en la pestaña de 'Tiempo Real' en la sección de Eventos. ¡No te lo pierdas! 🚀";
+            return "¡Oh! El lanzamiento de SpaceX es un evento emocionante. El Starship Flight 6 está programado para enero. Puedes ver los detalles en la pestaña de 'Fenómenos en Vivo' en la sección de Noticias. ¡No te lo pierdas! 🚀";
         }
 
         const match = SIMULATED_RESPONSES.find(r => r.keywords.some(k => lowerMsg.includes(k)));
-
         if (match) return match.response;
 
-        // Default simulation response
-        return "Esa es una pregunta fascinante. Actualmente estoy operando en modo de simulación porque mi enlace con Gemini no está activo. Configura tu API Key para desbloquear todo mi conocimiento. ¿Te gustaría saber sobre los planetas mientras tanto? ✨";
+        return "Esa es una pregunta fascinante. Actualmente estoy operando en modo de simulación. Por favor configura mi API Key para acceder a todo mi conocimiento. ✨";
 
     } catch (error) {
         console.error("AI Error:", error);
-        return "Mis sensores detectan una interferencia. Es posible que la API Key no sea válida o haya un problema de red. Por favor verifica tu configuración. 📡";
+        return "Mis sensores detectan una interferencia en la red galáctica. Es posible que haya un problema con la API Key o la conexión. Por favor intenta de nuevo más tarde o contacta a soporte humano en alvarogarciamaxwell@gmail.com 📡";
     }
 };

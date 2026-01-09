@@ -14,10 +14,28 @@ export const AuthProvider = ({ children }) => {
         const initSession = async () => {
             if (supabase) {
                 const { data: { session } } = await supabase.auth.getSession();
-                setUser(session?.user ?? null);
+                if (session?.user) {
+                    const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('*')
+                        .eq('id', session.user.id)
+                        .single();
+                    setUser({ ...session.user, role: profile?.role || 'user' });
+                } else {
+                    setUser(null);
+                }
 
-                const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-                    setUser(session?.user ?? null);
+                const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+                    if (session?.user) {
+                        const { data: profile } = await supabase
+                            .from('profiles')
+                            .select('*')
+                            .eq('id', session.user.id)
+                            .single();
+                        setUser({ ...session.user, role: profile?.role || 'user' });
+                    } else {
+                        setUser(null);
+                    }
                 });
                 return () => subscription.unsubscribe();
             } else {

@@ -8,6 +8,7 @@ import Chatbot from './components/Chatbot';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import AdminPanel from './pages/AdminPanel';
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/admin" element={<AdminPanel />} />
             </Routes>
           </main>
 
