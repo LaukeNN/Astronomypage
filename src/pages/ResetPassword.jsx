@@ -70,12 +70,12 @@ const ResetPassword = () => {
             setMessage("¡Contraseña actualizada con éxito! Redirigiendo al inicio de sesión...");
             // Sign out to force fresh login with new password
             await supabase.auth.signOut();
+            // Keep loading true while redirecting for better UX
             setTimeout(() => {
                 navigate('/login');
-            }, 2000);
+            }, 1500);
         } catch (err) {
             setError(err.message);
-        } finally {
             setLoading(false);
         }
     };
