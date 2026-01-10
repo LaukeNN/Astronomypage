@@ -68,9 +68,11 @@ const ResetPassword = () => {
             if (error) throw error;
 
             setMessage("¡Contraseña actualizada con éxito! Redirigiendo al inicio de sesión...");
+            // Sign out to force fresh login with new password
+            await supabase.auth.signOut();
             setTimeout(() => {
                 navigate('/login');
-            }, 3000);
+            }, 2000);
         } catch (err) {
             setError(err.message);
         } finally {

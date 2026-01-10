@@ -9,6 +9,7 @@ import { Link, useNavigate } from 'react-router-dom';
 const Navbar = () => {
     const [isScrolled, setIsScrolled] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [loggingOut, setLoggingOut] = useState(false);
     const { user, logout } = useAuth();
     const navigate = useNavigate();
 
@@ -21,8 +22,13 @@ const Navbar = () => {
     }, []);
 
     const handleLogout = async () => {
-        await logout();
-        navigate('/');
+        setLoggingOut(true);
+        try {
+            await logout();
+            navigate('/');
+        } finally {
+            setLoggingOut(false);
+        }
     };
 
     const navLinks = [
@@ -81,8 +87,8 @@ const Navbar = () => {
                                         </Button>
                                     </Link>
                                 )}
-                                <Button variant="outline" size="sm" onClick={handleLogout} className="px-3 py-1 border-red-500/50 text-red-400 hover:bg-red-500/10">
-                                    <LogOut size={16} />
+                                <Button variant="outline" size="sm" onClick={handleLogout} disabled={loggingOut} className="px-3 py-1 border-red-500/50 text-red-400 hover:bg-red-500/10 disabled:opacity-50">
+                                    {loggingOut ? <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" /> : <LogOut size={16} />}
                                 </Button>
                             </div>
                         ) : (
@@ -127,7 +133,9 @@ const Navbar = () => {
                                 {user ? (
                                     <div className="border-t border-white/10 pt-4 flex flex-col gap-2">
                                         <span className="text-electric-cyan text-sm">Hola, {user.full_name || user.email}</span>
-                                        <Button variant="outline" onClick={handleLogout} className="w-full justify-center border-red-500 text-red-400">Cerrar Sesión</Button>
+                                        <Button variant="outline" onClick={handleLogout} disabled={loggingOut} className="w-full justify-center border-red-500 text-red-400 disabled:opacity-50">
+                                            {loggingOut ? 'Cerrando...' : 'Cerrar Sesión'}
+                                        </Button>
                                     </div>
                                 ) : (
                                     <div className="flex flex-col gap-2 pt-2">
