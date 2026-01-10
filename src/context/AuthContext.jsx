@@ -12,40 +12,53 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         // Check active session
         const initSession = async () => {
-            if (supabase) {
-                const { data: { session } } = await supabase.auth.getSession();
-                if (session?.user) {
-                    const { data: profile } = await supabase
-                        .from('profiles')
-                        .select('*')
-                        .eq('id', session.user.id)
-                        .single();
-                    setUser({ ...session.user, role: profile?.role || 'user' });
-                } else {
-                    setUser(null);
-                }
+            try {
+                if (supabase) {
+                    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                    if (sessionError) throw sessionError;
 
-                const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
                     if (session?.user) {
-                        const { data: profile } = await supabase
+                        const { data: profile, error: profileError } = await supabase
                             .from('profiles')
                             .select('*')
                             .eq('id', session.user.id)
                             .single();
+
+                        if (profileError && profileError.code !== 'PGRST116') {
+                            console.warn("Profile fetch error:", profileError);
+                        }
+
                         setUser({ ...session.user, role: profile?.role || 'user' });
                     } else {
                         setUser(null);
                     }
-                });
-                return () => subscription.unsubscribe();
-            } else {
-                // Check local storage for mock session
-                const storedUser = localStorage.getItem('currentUser');
-                if (storedUser) {
-                    setUser(JSON.parse(storedUser));
+
+                    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+                        if (session?.user) {
+                            const { data: profile } = await supabase
+                                .from('profiles')
+                                .select('*')
+                                .eq('id', session.user.id)
+                                .single();
+                            setUser({ ...session.user, role: profile?.role || 'user' });
+                        } else {
+                            setUser(null);
+                        }
+                    });
+                    return () => subscription.unsubscribe();
+                } else {
+                    // Check local storage for mock session
+                    const storedUser = localStorage.getItem('currentUser');
+                    if (storedUser) {
+                        setUser(JSON.parse(storedUser));
+                    }
                 }
+            } catch (error) {
+                console.error("Auth init error:", error);
+                setUser(null);
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         };
         initSession();
     }, []);

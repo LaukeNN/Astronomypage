@@ -262,7 +262,9 @@ const AdminPanel = () => {
         }
     };
 
-    if (authLoading || loading) return <div className="min-h-screen bg-deep-space-black flex items-center justify-center text-white">Cargando panel...</div>;
+    if (authLoading) return <div className="min-h-screen bg-deep-space-black flex items-center justify-center text-white flex-col gap-4"><div className="w-8 h-8 border-4 border-electric-cyan border-t-transparent rounded-full animate-spin"></div><p>Verificando sesión...</p></div>;
+
+    if (loading) return <div className="min-h-screen bg-deep-space-black flex items-center justify-center text-white flex-col gap-4"><div className="w-8 h-8 border-4 border-starlight-gold border-t-transparent rounded-full animate-spin"></div><p>Cargando datos del panel...</p></div>;
 
     return (
         <div className="min-h-screen bg-deep-space-black text-gray-100 font-sans pt-20 pb-12 px-4 md:px-8">
