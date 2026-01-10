@@ -60,16 +60,26 @@ const ResetPassword = () => {
 
         try {
             console.log("Updating password...");
-            const { error: updateError } = await supabase.auth.updateUser({ password: password });
+
+            // Create timeout promise
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error("Timeout: La operación tardó demasiado")), 10000)
+            );
+
+            // Race between update and timeout
+            const { error: updateError } = await Promise.race([
+                supabase.auth.updateUser({ password: password }),
+                timeoutPromise
+            ]);
 
             if (updateError) {
                 console.error("Update error:", updateError);
                 throw updateError;
             }
 
-            console.log("Password updated successfully");
+            console.log("Password updated successfully!");
 
-            // Show success FIRST, before signing out
+            // Show success FIRST
             setSuccess(true);
             setLoading(false);
 
@@ -78,14 +88,14 @@ const ResetPassword = () => {
                 try {
                     await supabase.auth.signOut();
                 } catch (e) {
-                    console.error("Signout error:", e);
+                    console.error("Signout error (non-critical):", e);
                 }
                 navigate('/login');
             }, 2000);
 
         } catch (err) {
             console.error("Password update failed:", err);
-            setError(err.message || "Error al actualizar la contraseña");
+            setError(err.message || "Error al actualizar la contraseña. Intenta nuevamente.");
             setLoading(false);
         }
     };
