@@ -9,6 +9,8 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import AdminPanel from './pages/AdminPanel';
+import ResetPassword from './pages/ResetPassword';
+import EmailVerified from './pages/EmailVerified';
 
 function App() {
   return (
@@ -23,6 +25,8 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/admin" element={<AdminPanel />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/email-verified" element={<EmailVerified />} />
             </Routes>
           </main>
 

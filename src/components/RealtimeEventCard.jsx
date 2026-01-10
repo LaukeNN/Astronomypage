@@ -27,7 +27,7 @@ const RealtimeEventCard = ({ title, date, location, time, description, image, so
             </div>
 
             <div
-                className="h-40 overflow-hidden relative cursor-pointer group"
+                className="h-48 overflow-hidden relative cursor-pointer group"
                 onClick={handleImageClick}
                 title={sourceUrl ? "Click para visitar la página oficial" : ""}
             >

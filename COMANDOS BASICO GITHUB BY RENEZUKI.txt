@@ -5,3 +5,5 @@ COMANDOS BASICO GITHUB BY RENEZUKI
 1- git add . (agrega todo el punto es para todos los archivos)
 2- git commit -m "escribes un msj" (es una etiqueta para el nombre que va a tener la version de guardado que subiste)
 3- git push (subir los cambios efectivamente)
+git remote -v (preguntar que repositorio esta actualmente)
+git remote set-url origin https://github.com/tu-usuario/repositorio-CORRECTO.git (redireccionar repositorio)

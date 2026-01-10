@@ -195,7 +195,9 @@ export const db = {
     // Admin Functions
     createEvent: async (eventData) => {
         if (supabase) {
-            const { data, error } = await supabase.from('events').insert([eventData]).select();
+            // Sanitize data: remove 'currency' or other UI-only fields if they exist
+            const { currency, ...validData } = eventData;
+            const { data, error } = await supabase.from('events').insert([validData]).select();
             if (error) throw error;
             return data[0];
         } else {
