@@ -88,9 +88,10 @@ const ResetPassword = () => {
                 try {
                     await supabase.auth.signOut();
                 } catch (e) {
-                    console.error("Signout error (non-critical):", e);
+                    // Ignore signout errors
                 }
-                navigate('/login');
+                // Use hard redirect to ensure navigation works
+                window.location.href = '/login';
             }, 2000);
 
         } catch (err) {
