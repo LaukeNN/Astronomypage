@@ -7,3 +7,4 @@ COMANDOS BASICO GITHUB BY RENEZUKI
 3- git push (subir los cambios efectivamente)
 git remote -v (preguntar que repositorio esta actualmente)
 git remote set-url origin https://github.com/tu-usuario/repositorio-CORRECTO.git (redireccionar repositorio)
+git push origin main (actualizar la rama main, necesario para que se actualice vercel)

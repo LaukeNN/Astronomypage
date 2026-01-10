@@ -18,12 +18,13 @@ const Login = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         setLoading(true);
+        setError('');
         try {
             await login(email, password);
+            // Navigate without resetting loading - the page will unmount
             navigate('/');
         } catch (err) {
             setError(err.message);
-        } finally {
             setLoading(false);
         }
     };
