@@ -81,7 +81,10 @@ export const AuthProvider = ({ children }) => {
             const { data, error } = await supabase.auth.signUp({
                 email,
                 password,
-                options: { data: { full_name: name } }
+                options: {
+                    data: { full_name: name },
+                    emailRedirectTo: window.location.origin
+                }
             });
             if (error) throw error;
             return data.user;
@@ -90,6 +93,20 @@ export const AuthProvider = ({ children }) => {
             setUser(mockUser);
             localStorage.setItem('currentUser', JSON.stringify(mockUser));
             return mockUser;
+        }
+    };
+
+    const resetPassword = async (email) => {
+        if (supabase) {
+            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: `${window.location.origin}/reset-password`,
+            });
+            if (error) throw error;
+            return true;
+        } else {
+            // Mock behavior
+            await new Promise(resolve => setTimeout(resolve, 800));
+            return true;
         }
     };
 
@@ -103,7 +120,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+        <AuthContext.Provider value={{ user, login, register, logout, resetPassword, loading }}>
             {children}
         </AuthContext.Provider>
     );

@@ -27,7 +27,7 @@ const RealtimeEventCard = ({ title, date, location, time, description, image, so
             </div>
 
             <div
-                className="h-48 overflow-hidden relative cursor-pointer group"
+                className="h-40 overflow-hidden relative cursor-pointer group"
                 onClick={handleImageClick}
                 title={sourceUrl ? "Click para visitar la página oficial" : ""}
             >
@@ -44,13 +44,13 @@ const RealtimeEventCard = ({ title, date, location, time, description, image, so
                 )}
             </div>
 
-            <div className="p-6 flex flex-col flex-grow">
+            <div className="p-5 flex flex-col flex-grow">
                 <div className="flex items-center gap-2 text-electric-cyan mb-2 text-sm">
                     <Rocket size={16} />
                     <span>Evento Astronómico Global</span>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-3">{title}</h3>
-                <p className="text-gray-300 text-sm mb-4 leading-relaxed line-clamp-3">{description}</p>
+                <h3 className="text-xl font-bold text-white mb-2 leading-tight">{title}</h3>
+                <p className="text-gray-300 text-sm mb-4 line-clamp-3">{description}</p>
 
                 <div className="flex flex-wrap gap-x-4 gap-y-2 text-gray-400 text-xs mb-6">
                     <div className="flex items-center gap-1"><Calendar size={14} /> {date.day} {date.month}</div>
