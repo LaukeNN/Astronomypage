@@ -83,7 +83,7 @@ export const AuthProvider = ({ children }) => {
                 password,
                 options: {
                     data: { full_name: name },
-                    emailRedirectTo: window.location.origin
+                    emailRedirectTo: `${window.location.origin}/email-verified`
                 }
             });
             if (error) throw error;
