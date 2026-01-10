@@ -65,10 +65,10 @@ const Gallery = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-deep-space-black via-transparent to-transparent opacity-80"></div>
 
                     {/* Controls */}
-                    <button onClick={prevSlide} className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/30 backdrop-blur-md border border-white/10 text-white hover:bg-white/10 transition-colors z-20 group-hover:opacity-100 opacity-0 duration-300">
+                    <button onClick={(e) => { e.stopPropagation(); prevSlide(); }} className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/30 backdrop-blur-md border border-white/10 text-white hover:bg-white/10 transition-colors z-20 group-hover:opacity-100 opacity-0 duration-300">
                         <ChevronLeft size={24} />
                     </button>
-                    <button onClick={nextSlide} className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/30 backdrop-blur-md border border-white/10 text-white hover:bg-white/10 transition-colors z-20 group-hover:opacity-100 opacity-0 duration-300">
+                    <button onClick={(e) => { e.stopPropagation(); nextSlide(); }} className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/30 backdrop-blur-md border border-white/10 text-white hover:bg-white/10 transition-colors z-20 group-hover:opacity-100 opacity-0 duration-300">
                         <ChevronRight size={24} />
                     </button>
 
