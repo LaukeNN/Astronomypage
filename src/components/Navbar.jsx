@@ -78,7 +78,7 @@ const Navbar = () => {
                         {user ? (
                             <div className="flex items-center gap-4">
                                 <span className="text-electric-cyan text-sm flex items-center gap-1">
-                                    <User size={16} /> Hola, {user.full_name || user.email?.split('@')[0]}
+                                    <User size={16} /> Hola, {user.user_metadata?.full_name || user.email?.split('@')[0]}
                                 </span>
                                 {user.role === 'admin' && (
                                     <Link to="/admin">
@@ -132,7 +132,7 @@ const Navbar = () => {
 
                                 {user ? (
                                     <div className="border-t border-white/10 pt-4 flex flex-col gap-2">
-                                        <span className="text-electric-cyan text-sm">Hola, {user.full_name || user.email}</span>
+                                        <span className="text-electric-cyan text-sm">Hola, {user.user_metadata?.full_name || user.email}</span>
                                         <Button variant="outline" onClick={handleLogout} disabled={loggingOut} className="w-full justify-center border-red-500 text-red-400 disabled:opacity-50">
                                             {loggingOut ? 'Cerrando...' : 'Cerrar Sesión'}
                                         </Button>

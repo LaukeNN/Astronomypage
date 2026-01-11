@@ -13,32 +13,22 @@ const ResetPassword = () => {
     const [initializing, setInitializing] = useState(true);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState(null);
+    const [accessToken, setAccessToken] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
-        // Supabase sends the recovery token in the URL hash
+        // Extract and store the recovery token from URL
         const handleRecoveryToken = async () => {
             try {
                 const hashParams = new URLSearchParams(window.location.hash.substring(1));
-                const accessToken = hashParams.get('access_token');
+                const token = hashParams.get('access_token');
                 const type = hashParams.get('type');
 
-                if (accessToken && type === 'recovery') {
-                    // Small delay to handle token validation
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                }
-
-                const { data: { session } } = await supabase.auth.getSession();
-                if (!session) {
+                if (!token || type !== 'recovery') {
                     setError("Enlace inválido o expirado. Por favor solicita un nuevo correo de recuperación.");
                 } else {
-                    // CRITICAL: Force logout immediately so user is NOT logged in during password reset
-                    try {
-                        await supabase.auth.signOut();
-                        console.log("User logged out for password reset");
-                    } catch (logoutErr) {
-                        console.warn("Logout warning (non-critical):", logoutErr);
-                    }
+                    setAccessToken(token);
+                    console.log("Recovery token validated");
                 }
             } catch (err) {
                 console.error("Error processing recovery:", err);
@@ -87,6 +77,14 @@ const ResetPassword = () => {
 
             console.log("Password updated successfully!");
 
+            // Logout user after successful password change
+            try {
+                await supabase.auth.signOut();
+                console.log("User logged out after password reset");
+            } catch (logoutErr) {
+                console.warn("Logout warning (non-critical):", logoutErr);
+            }
+
             // Show success UI
             setSuccess(true);
             setLoading(false);
@@ -100,6 +98,12 @@ const ResetPassword = () => {
             // Fail-safe: If it's a timeout, treat as success (password likely changed)
             if (err.message && err.message.includes("Timeout")) {
                 console.warn("Operation timed out but treating as success based on fail-safe policy.");
+
+                // Logout and show success
+                try {
+                    await supabase.auth.signOut();
+                } catch (e) { /* ignore */ }
+
                 setSuccess(true);
                 setLoading(false);
                 setTimeout(() => {
