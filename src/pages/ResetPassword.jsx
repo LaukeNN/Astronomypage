@@ -38,6 +38,13 @@ const ResetPassword = () => {
                         setInitializing(false);
                     }, 500);
                 }
+            } else if (event === "USER_UPDATED") {
+                console.log("¡Contraseña actualizada con éxito! (Event Detected)");
+                setSuccess(true);
+                // Redirección automática tras breve pausa visual
+                setTimeout(() => {
+                    window.location.href = "/login";
+                }, 2000);
             }
         });
 
