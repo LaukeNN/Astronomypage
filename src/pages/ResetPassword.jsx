@@ -83,19 +83,20 @@ const ResetPassword = () => {
             console.log("Password updated successfully!");
 
             // Show success FIRST
-            setSuccess(true);
-            setLoading(false);
+            console.log("Password updated successfully!");
 
-            // Then sign out and redirect after a delay
+            // User requested: No confirmation message, just wait 7 seconds and redirect.
+            // We keep loading=true so the user sees the spinner during this time.
+
             setTimeout(async () => {
                 try {
                     await supabase.auth.signOut();
                 } catch (e) {
                     // Ignore signout errors
                 }
-                // Use hard redirect to ensure navigation works
+                // Hard redirect to login
                 window.location.href = '/login';
-            }, 2000);
+            }, 7000);
 
         } catch (err) {
             console.error("Password update failed:", err);
