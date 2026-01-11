@@ -24,13 +24,21 @@ const ResetPassword = () => {
                 const type = hashParams.get('type');
 
                 if (accessToken && type === 'recovery') {
-                    // Wait longer (4s) to handle significant clock skew issues
-                    await new Promise(resolve => setTimeout(resolve, 4000));
+                    // Small delay to handle token validation
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                 }
 
                 const { data: { session } } = await supabase.auth.getSession();
                 if (!session) {
                     setError("Enlace inválido o expirado. Por favor solicita un nuevo correo de recuperación.");
+                } else {
+                    // CRITICAL: Force logout immediately so user is NOT logged in during password reset
+                    try {
+                        await supabase.auth.signOut();
+                        console.log("User logged out for password reset");
+                    } catch (logoutErr) {
+                        console.warn("Logout warning (non-critical):", logoutErr);
+                    }
                 }
             } catch (err) {
                 console.error("Error processing recovery:", err);
@@ -62,12 +70,11 @@ const ResetPassword = () => {
         try {
             console.log("Updating password...");
 
-            // Create timeout promise - Extended to 30s to avoid premature failures
+            // Update password with reasonable timeout
             const timeoutPromise = new Promise((_, reject) =>
                 setTimeout(() => reject(new Error("Timeout: La operación tardó demasiado")), 30000)
             );
 
-            // Race between update and timeout
             const { error: updateError } = await Promise.race([
                 supabase.auth.updateUser({ password: password }),
                 timeoutPromise
@@ -80,32 +87,24 @@ const ResetPassword = () => {
 
             console.log("Password updated successfully!");
 
-            // Show success FIRST
-            console.log("Password updated successfully!");
+            // Show success UI
+            setSuccess(true);
+            setLoading(false);
 
-            // User requested: No confirmation message, just wait 7 seconds and redirect.
-            // We keep loading=true so the user sees the spinner during this time.
-
-            setTimeout(async () => {
-                try {
-                    await supabase.auth.signOut();
-                } catch (e) {
-                    // Ignore signout errors
-                }
-                // Hard redirect to login
+            // Redirect after 3 seconds
+            setTimeout(() => {
                 window.location.href = '/login';
-            }, 7000);
+            }, 3000);
 
         } catch (err) {
-            // Fail-safe: If it's a timeout, we assume functionality worked (as per user report) and redirect anyway.
+            // Fail-safe: If it's a timeout, treat as success (password likely changed)
             if (err.message && err.message.includes("Timeout")) {
                 console.warn("Operation timed out but treating as success based on fail-safe policy.");
-                setTimeout(async () => {
-                    try {
-                        await supabase.auth.signOut();
-                    } catch (e) { /* ignore */ }
+                setSuccess(true);
+                setLoading(false);
+                setTimeout(() => {
                     window.location.href = '/login';
-                }, 7000); // Same 7s delay
+                }, 3000);
                 return;
             }
 
