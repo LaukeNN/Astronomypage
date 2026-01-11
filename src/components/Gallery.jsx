@@ -91,7 +91,7 @@ const Gallery = () => {
                 </div>
 
                 {/* Thumbnails Strip */}
-                <div className="flex justify-center mt-12 gap-4 overflow-x-auto pb-6 px-4 scrollbar-hide">
+                <div className="flex justify-center mt-12 gap-4 overflow-x-auto py-6 px-4 scrollbar-hide">
                     {photos.map((photo, index) => (
                         <button
                             key={index}
