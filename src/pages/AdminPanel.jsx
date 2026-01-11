@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../lib/db';
+import { supabase } from '../lib/supabaseClient';
 import { Trash2, Plus, Calendar, MapPin, DollarSign, Image as ImageIcon, Rocket, Users, Clock, Upload, Camera, Settings, CreditCard, Share2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -125,6 +126,29 @@ const AdminPanel = () => {
                 navigate('/');
             } else {
                 fetchData();
+
+                // ✅ ESCUCHA EN TIEMPO REAL: Actualización automática
+                if (supabase) {
+                    const channel = supabase
+                        .channel('admin_realtime')
+                        .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, () => {
+                            console.log("Realtime: events updated");
+                            db.getEvents().then(data => setEvents(data.filter(e => e.type === 'booking')));
+                        })
+                        .on('postgres_changes', { event: '*', schema: 'public', table: 'team_members' }, () => {
+                            console.log("Realtime: team updated");
+                            db.getTeam().then(setTeam);
+                        })
+                        .on('postgres_changes', { event: '*', schema: 'public', table: 'gallery' }, () => {
+                            console.log("Realtime: gallery updated");
+                            db.getGallery().then(setGallery);
+                        })
+                        .subscribe();
+
+                    return () => {
+                        supabase.removeChannel(channel);
+                    };
+                }
             }
         }
     }, [user, authLoading, navigate]);
@@ -146,6 +170,13 @@ const AdminPanel = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    // ✅ LIMPIEZA TOTAL: Resetear formularios
+    const resetForms = () => {
+        setEventForm({ title: '', date: '', time: '', location: '', address: '', image: '', price: '', currency: 'USD', description: '' });
+        setTeamForm({ name: '', role: '', expertise: '', image: '' });
+        setGalleryForm({ src: '', alt: '' });
     };
 
     // --- generic Handlers ---
@@ -202,21 +233,14 @@ const AdminPanel = () => {
             };
 
             await db.createEvent(eventPayload);
-
-            // Reload data
-            await fetchData();
-
-            setEventForm({ title: '', date: '', time: '', location: '', address: '', image: '', price: '', currency: 'USD', description: '' });
-
-            // Stop loading BEFORE alert to prevent UI freeze state
-            setCreateEventLoading(false);
-
-            // Short timeout to allow React to render the disabled=false state before blocking with alert
-            setTimeout(() => alert("¡Evento creado!"), 10);
+            resetForms(); // ✅ Limpia automáticamente
+            alert("¡Evento creado!");
         } catch (error) {
-            setCreateEventLoading(false);
             console.error(error);
-            setTimeout(() => alert("Error: " + error.message), 10);
+            alert("Error: " + error.message);
+        } finally {
+            // ✅ DESBLOQUEO: Siempre se ejecuta
+            setCreateEventLoading(false);
         }
     };
 
@@ -226,15 +250,14 @@ const AdminPanel = () => {
         setCreateTeamLoading(true);
         try {
             await db.addTeamMember(teamForm);
-            await fetchData();
-            setTeamForm({ name: '', role: '', expertise: '', image: '' });
-
-            setCreateTeamLoading(false);
-            setTimeout(() => alert("¡Miembro añadido!"), 10);
+            resetForms(); // ✅ Limpia automáticamente
+            alert("¡Miembro añadido!");
         } catch (error) {
-            setCreateTeamLoading(false);
             console.error(error);
-            setTimeout(() => alert("Error: " + error.message), 10);
+            alert("Error: " + error.message);
+        } finally {
+            // ✅ DESBLOQUEO: Siempre se ejecuta
+            setCreateTeamLoading(false);
         }
     };
 
@@ -244,15 +267,14 @@ const AdminPanel = () => {
         setCreateGalleryLoading(true);
         try {
             await db.addToGallery(galleryForm);
-            await fetchData();
-            setGalleryForm({ src: '', alt: '' });
-
-            setCreateGalleryLoading(false);
-            setTimeout(() => alert("¡Imagen añadida a la galería!"), 10);
+            resetForms(); // ✅ Limpia automáticamente
+            alert("¡Imagen añadida a la galería!");
         } catch (error) {
-            setCreateGalleryLoading(false);
             console.error(error);
-            setTimeout(() => alert("Error: " + error.message), 10);
+            alert("Error: " + error.message);
+        } finally {
+            // ✅ DESBLOQUEO: Siempre se ejecuta
+            setCreateGalleryLoading(false);
         }
     };
 
