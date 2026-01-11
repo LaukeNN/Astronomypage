@@ -41,9 +41,9 @@ const ResetPassword = () => {
             } else if (event === "USER_UPDATED") {
                 console.log("¡Contraseña actualizada con éxito! (Event Detected)");
                 setSuccess(true);
-                // Redirección automática tras breve pausa visual
+                // Redirección automática al Home (manteniendo sesión)
                 setTimeout(() => {
-                    window.location.href = "/login";
+                    window.location.href = "/";
                 }, 2000);
             }
         });
@@ -94,11 +94,8 @@ const ResetPassword = () => {
             console.log("✅ Contraseña actualizada");
             setSuccess(true);
 
-            // Clean up and redirect
-            setTimeout(async () => {
-                await supabase.auth.signOut();
-                window.location.href = '/login';
-            }, 3000);
+            // Ya no hacemos signOut() ni redirección aquí porque el evento USER_UPDATED lo manejará
+            // o lo manejamos aquí como fallback si el evento no dispara
 
         } catch (err) {
             console.error("Password update failed:", err);
@@ -143,7 +140,7 @@ const ResetPassword = () => {
                         </h2>
 
                         <p className="text-gray-300 mb-6">
-                            Tu contraseña ha sido cambiada exitosamente. Redirigiendo al inicio de sesión...
+                            ✅ ¡Contraseña restablecida! Iniciando sesión...
                         </p>
 
                         <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
