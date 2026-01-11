@@ -2,7 +2,7 @@
 import { db } from "./db";
 import { pageInfo } from "../data/knowledgeBase";
 
-const API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || "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";
+const API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY;
 
 // Fallback/Simulation Knowledge Base if no API Key
 const SIMULATED_RESPONSES = [
