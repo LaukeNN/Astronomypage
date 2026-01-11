@@ -3,6 +3,17 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { db } from '../lib/db';
 
+const TIMEOUT_MS = 10000; // 10 seconds timeout
+
+const withTimeout = (promise) => {
+    return Promise.race([
+        promise,
+        new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('La conexión tardó demasiado. Por favor, intenta de nuevo.')), TIMEOUT_MS)
+        )
+    ]);
+};
+
 const AuthContext = createContext({});
 
 export const AuthProvider = ({ children }) => {
@@ -65,8 +76,7 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, password) => {
         if (supabase) {
-            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-            if (error) throw error;
+            const { data, error } = await withTimeout(supabase.auth.signInWithPassword({ email, password })); if (error) throw error;
             return data.user;
         } else {
             const mockUser = await db.loginMock(email, password);
@@ -78,14 +88,14 @@ export const AuthProvider = ({ children }) => {
 
     const register = async (email, password, name) => {
         if (supabase) {
-            const { data, error } = await supabase.auth.signUp({
+            const { data, error } = await withTimeout(supabase.auth.signUp({
                 email,
                 password,
                 options: {
                     data: { full_name: name },
                     emailRedirectTo: `${window.location.origin}/email-verified`
                 }
-            });
+            }));
             if (error) throw error;
             return data.user;
         } else {
@@ -98,9 +108,9 @@ export const AuthProvider = ({ children }) => {
 
     const resetPassword = async (email) => {
         if (supabase) {
-            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            const { error } = await withTimeout(supabase.auth.resetPasswordForEmail(email, {
                 redirectTo: `${window.location.origin}/reset-password`,
-            });
+            }));
             if (error) throw error;
             return true;
         } else {
@@ -112,7 +122,11 @@ export const AuthProvider = ({ children }) => {
 
     const logout = async () => {
         if (supabase) {
-            await supabase.auth.signOut();
+            try {
+                await withTimeout(supabase.auth.signOut());
+            } catch (error) {
+                console.warn("Logout timeout or error, forcing local cleanup:", error);
+            }
         } else {
             localStorage.removeItem('currentUser');
         }
