@@ -132,7 +132,7 @@ const ResetPassword = () => {
                         </div>
 
                         <h2 className="text-2xl font-bold text-white mb-3">
-                            ¡Contraseña Actualizada!
+                            Contraseña actualizada
                         </h2>
 
                         <p className="text-gray-300 mb-6">

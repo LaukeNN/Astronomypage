@@ -14,8 +14,8 @@ const EmailVerified = () => {
         if (user) {
             // Maybe wait a few seconds so they see the success message
             const timer = setTimeout(() => {
-                navigate('/');
-            }, 5000);
+                navigate('/login'); // Redirect to login, not home
+            }, 3000); // 3 seconds
             return () => clearTimeout(timer);
         }
     }, [user, navigate]);
@@ -30,9 +30,9 @@ const EmailVerified = () => {
                     <BadgeCheck className="w-12 h-12 text-green-400" />
                 </div>
 
-                <h2 className="text-3xl font-bold text-white mb-4">¡Email Verificado!</h2>
+                <h2 className="text-3xl font-bold text-white mb-4">Mail confirmado, bienvenido a bordo</h2>
                 <p className="text-gray-300 mb-8 text-lg">
-                    Tu cuenta ha sido confirmada correctamente. Ya estás listo para explorar el cosmos con nosotros.
+                    Tu cuenta ha sido confirmada correctamente. Redirigiendo al inicio de sesión...
                 </p>
 
                 <div className="space-y-4">
