@@ -121,6 +121,8 @@ const AdminPanel = () => {
     // Config Form is derived from loaded config, so it's initialized in useEffect/fetchData
 
     useEffect(() => {
+        let isMounted = true;
+
         if (!authLoading) {
             if (!user || user.role !== 'admin') {
                 navigate('/');
@@ -133,24 +135,32 @@ const AdminPanel = () => {
                         .channel('admin_realtime')
                         .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, () => {
                             console.log("Realtime: events updated");
-                            db.getEvents().then(data => setEvents(data.filter(e => e.type === 'booking')));
+                            db.getEvents().then(data => {
+                                if (isMounted) setEvents(data.filter(e => e.type === 'booking'));
+                            });
                         })
                         .on('postgres_changes', { event: '*', schema: 'public', table: 'team_members' }, () => {
                             console.log("Realtime: team updated");
-                            db.getTeam().then(setTeam);
+                            db.getTeam().then(data => {
+                                if (isMounted) setTeam(data);
+                            });
                         })
                         .on('postgres_changes', { event: '*', schema: 'public', table: 'gallery' }, () => {
                             console.log("Realtime: gallery updated");
-                            db.getGallery().then(setGallery);
+                            db.getGallery().then(data => {
+                                if (isMounted) setGallery(data);
+                            });
                         })
                         .subscribe();
 
                     return () => {
                         supabase.removeChannel(channel);
+                        isMounted = false;
                     };
                 }
             }
         }
+        return () => { isMounted = false; };
     }, [user, authLoading, navigate]);
 
     const fetchData = async () => {
@@ -200,7 +210,8 @@ const AdminPanel = () => {
         e.preventDefault();
         setSaveConfigLoading(true);
         try {
-            await db.updateConfig(config);
+            const savedConfig = await db.updateConfig(config);
+            setConfig(savedConfig); // Update local state with confirmed data
             alert("¡Configuración guardada exitosamente!");
         } catch (error) {
             console.error("Error saving config:", error);
@@ -232,7 +243,8 @@ const AdminPanel = () => {
                 slots: 20
             };
 
-            await db.createEvent(eventPayload);
+            const newEvent = await db.createEvent(eventPayload);
+            setEvents(prev => [...prev, newEvent]); // Update local state immediately
             resetForms(); // ✅ Limpia automáticamente
             alert("¡Evento creado!");
         } catch (error) {
@@ -249,7 +261,8 @@ const AdminPanel = () => {
         e.preventDefault();
         setCreateTeamLoading(true);
         try {
-            await db.addTeamMember(teamForm);
+            const newMember = await db.addTeamMember(teamForm);
+            setTeam(prev => [...prev, newMember]); // Update local state immediately
             resetForms(); // ✅ Limpia automáticamente
             alert("¡Miembro añadido!");
         } catch (error) {
@@ -266,7 +279,8 @@ const AdminPanel = () => {
         e.preventDefault();
         setCreateGalleryLoading(true);
         try {
-            await db.addToGallery(galleryForm);
+            const newItem = await db.addToGallery(galleryForm);
+            setGallery(prev => [...prev, newItem]); // Update local state immediately
             resetForms(); // ✅ Limpia automáticamente
             alert("¡Imagen añadida a la galería!");
         } catch (error) {
