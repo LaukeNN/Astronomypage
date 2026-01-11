@@ -98,7 +98,7 @@ const Gallery = () => {
                             onClick={() => setCurrentIndex(index)}
                             className={`relative h-20 w-32 rounded-lg overflow-hidden flex-shrink-0 transition-all duration-300 ${currentIndex === index ? 'ring-2 ring-electric-cyan scale-105' : 'opacity-50 hover:opacity-100'}`}
                         >
-                            <img src={photo.src || photo.image} alt={photo.alt} className="w-full h-full object-cover" />
+                            <img src={photo.src || photo.image} alt={photo.alt} className="w-full h-full object-contain bg-black" />
                         </button>
                     ))}
                 </div>
