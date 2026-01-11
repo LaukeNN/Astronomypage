@@ -17,7 +17,8 @@ const ResetPassword = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        // Extract and store the recovery token from URL
+        // Supabase automatically creates a session when user clicks recovery link
+        // We need to wait for that session to be ready
         const handleRecoveryToken = async () => {
             try {
                 const hashParams = new URLSearchParams(window.location.hash.substring(1));
@@ -26,9 +27,30 @@ const ResetPassword = () => {
 
                 if (!token || type !== 'recovery') {
                     setError("Enlace inválido o expirado. Por favor solicita un nuevo correo de recuperación.");
-                } else {
-                    setAccessToken(token);
-                    console.log("Recovery token validated");
+                    setInitializing(false);
+                    return;
+                }
+
+                console.log("Recovery token found, waiting for session...");
+
+                // Give Supabase time to establish the session (up to 5 seconds)
+                let attempts = 0;
+                let sessionReady = false;
+
+                while (attempts < 10 && !sessionReady) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    const { data: { session } } = await supabase.auth.getSession();
+
+                    if (session) {
+                        console.log("Session ready for password reset");
+                        setAccessToken(token);
+                        sessionReady = true;
+                    }
+                    attempts++;
+                }
+
+                if (!sessionReady) {
+                    setError("No se pudo establecer la sesión. Por favor intenta de nuevo o solicita un nuevo enlace.");
                 }
             } catch (err) {
                 console.error("Error processing recovery:", err);
@@ -60,15 +82,9 @@ const ResetPassword = () => {
         try {
             console.log("Updating password...");
 
-            // Update password with reasonable timeout
-            const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error("Timeout: La operación tardó demasiado")), 30000)
-            );
-
-            const { error: updateError } = await Promise.race([
-                supabase.auth.updateUser({ password: password }),
-                timeoutPromise
-            ]);
+            const { error: updateError } = await supabase.auth.updateUser({
+                password: password
+            });
 
             if (updateError) {
                 console.error("Update error:", updateError);
@@ -95,23 +111,6 @@ const ResetPassword = () => {
             }, 3000);
 
         } catch (err) {
-            // Fail-safe: If it's a timeout, treat as success (password likely changed)
-            if (err.message && err.message.includes("Timeout")) {
-                console.warn("Operation timed out but treating as success based on fail-safe policy.");
-
-                // Logout and show success
-                try {
-                    await supabase.auth.signOut();
-                } catch (e) { /* ignore */ }
-
-                setSuccess(true);
-                setLoading(false);
-                setTimeout(() => {
-                    window.location.href = '/login';
-                }, 3000);
-                return;
-            }
-
             console.error("Password update failed:", err);
             setError(err.message || "Error al actualizar la contraseña. Intenta nuevamente.");
             setLoading(false);
