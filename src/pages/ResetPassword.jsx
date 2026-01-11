@@ -13,106 +13,90 @@ const ResetPassword = () => {
     const [initializing, setInitializing] = useState(true);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState(null);
-    const [accessToken, setAccessToken] = useState(null);
+    const [recoverySession, setRecoverySession] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
-        // Supabase automatically creates a session when user clicks recovery link
-        // We need to wait for that session to be ready
-        const handleRecoveryToken = async () => {
-            try {
-                const hashParams = new URLSearchParams(window.location.hash.substring(1));
-                const token = hashParams.get('access_token');
-                const type = hashParams.get('type');
+        // 1. Escuchamos el cambio de estado con el patrón de "espera activa"
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            console.log("Evento detectado:", event);
 
-                if (!token || type !== 'recovery') {
-                    setError("Enlace inválido o expirado. Por favor solicita un nuevo correo de recuperación.");
+            if (event === "PASSWORD_RECOVERY") {
+                // Damos un respiro de 500ms para que las cookies de Vercel se asienten
+                setTimeout(() => {
+                    console.log("Sesión lista para actualizar (Active Wait confirmed)");
+                    setRecoverySession(session);
                     setInitializing(false);
-                    return;
+                }, 500);
+            } else if (event === "SIGNED_IN") {
+                // Fallback para ciertos flujos donde SIGNED_IN ocurre antes
+                const isRecovery = window.location.hash.includes('type=recovery');
+                if (isRecovery) {
+                    setTimeout(() => {
+                        console.log("Sesión recuperada vía SIGNED_IN");
+                        setRecoverySession(session);
+                        setInitializing(false);
+                    }, 500);
                 }
-
-                console.log("Recovery token found, waiting for session...");
-
-                // Give Supabase time to establish the session (up to 5 seconds)
-                let attempts = 0;
-                let sessionReady = false;
-
-                while (attempts < 10 && !sessionReady) {
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                    const { data: { session } } = await supabase.auth.getSession();
-
-                    if (session) {
-                        console.log("Session ready for password reset");
-                        setAccessToken(token);
-                        sessionReady = true;
-                    }
-                    attempts++;
-                }
-
-                if (!sessionReady) {
-                    setError("No se pudo establecer la sesión. Por favor intenta de nuevo o solicita un nuevo enlace.");
-                }
-            } catch (err) {
-                console.error("Error processing recovery:", err);
-                setError("Error al procesar la solicitud. Por favor intenta nuevamente.");
-            } finally {
-                setInitializing(false);
             }
-        };
+        });
 
-        handleRecoveryToken();
+        // Timeout de seguridad si no ocurre nada en 10s
+        const safetyTimeout = setTimeout(() => {
+            if (initializing) {
+                console.warn("No auth event detected in 10s");
+                setInitializing(false);
+                // No seteamos error fatal aun, la UI mostrará que no hay sesión
+            }
+        }, 10000);
+
+        return () => {
+            subscription.unsubscribe();
+            clearTimeout(safetyTimeout);
+        };
     }, []);
 
     const handleUpdatePassword = async (e) => {
         e.preventDefault();
         setError(null);
-
-        if (password !== confirmPassword) {
-            setError("Las contraseñas no coinciden.");
-            return;
-        }
-
-        if (password.length < 6) {
-            setError("La contraseña debe tener al menos 6 caracteres.");
-            return;
-        }
-
         setLoading(true);
 
         try {
-            console.log("Updating password...");
+            if (password !== confirmPassword) {
+                throw new Error("Las contraseñas no coinciden.");
+            }
 
+            if (password.length < 6) {
+                throw new Error("La contraseña debe tener al menos 6 caracteres.");
+            }
+
+            // REPARACIÓN CLAVE: Verificamos sesión manualmente antes de disparar
+            const { data: { session } } = await supabase.auth.getSession();
+
+            if (!session) {
+                throw new Error("La sesión de recuperación expiró o es inválida. Por favor, solicita un nuevo correo.");
+            }
+
+            console.log("Updating password...");
             const { error: updateError } = await supabase.auth.updateUser({
                 password: password
             });
 
-            if (updateError) {
-                console.error("Update error:", updateError);
-                throw updateError;
-            }
+            if (updateError) throw updateError;
 
-            console.log("Password updated successfully!");
-
-            // Logout user after successful password change
-            try {
-                await supabase.auth.signOut();
-                console.log("User logged out after password reset");
-            } catch (logoutErr) {
-                console.warn("Logout warning (non-critical):", logoutErr);
-            }
-
-            // Show success UI
+            console.log("✅ Contraseña actualizada");
             setSuccess(true);
-            setLoading(false);
 
-            // Redirect after 3 seconds
-            setTimeout(() => {
+            // Clean up and redirect
+            setTimeout(async () => {
+                await supabase.auth.signOut();
                 window.location.href = '/login';
             }, 3000);
 
         } catch (err) {
             console.error("Password update failed:", err);
-            setError(err.message || "Error al actualizar la contraseña. Intenta nuevamente.");
+            setError(err.message || "Error al cambiar contraseña.");
+        } finally {
             setLoading(false);
         }
     };
