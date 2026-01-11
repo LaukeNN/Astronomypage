@@ -202,13 +202,21 @@ const AdminPanel = () => {
             };
 
             await db.createEvent(eventPayload);
+
+            // Reload data
             await fetchData();
+
             setEventForm({ title: '', date: '', time: '', location: '', address: '', image: '', price: '', currency: 'USD', description: '' });
-            alert("¡Evento creado!");
-        } catch (error) {
-            alert("Error: " + error.message);
-        } finally {
+
+            // Stop loading BEFORE alert to prevent UI freeze state
             setCreateEventLoading(false);
+
+            // Short timeout to allow React to render the disabled=false state before blocking with alert
+            setTimeout(() => alert("¡Evento creado!"), 10);
+        } catch (error) {
+            setCreateEventLoading(false);
+            console.error(error);
+            setTimeout(() => alert("Error: " + error.message), 10);
         }
     };
 
@@ -220,11 +228,13 @@ const AdminPanel = () => {
             await db.addTeamMember(teamForm);
             await fetchData();
             setTeamForm({ name: '', role: '', expertise: '', image: '' });
-            alert("¡Miembro añadido!");
-        } catch (error) {
-            alert("Error: " + error.message);
-        } finally {
+
             setCreateTeamLoading(false);
+            setTimeout(() => alert("¡Miembro añadido!"), 10);
+        } catch (error) {
+            setCreateTeamLoading(false);
+            console.error(error);
+            setTimeout(() => alert("Error: " + error.message), 10);
         }
     };
 
@@ -236,11 +246,13 @@ const AdminPanel = () => {
             await db.addToGallery(galleryForm);
             await fetchData();
             setGalleryForm({ src: '', alt: '' });
-            alert("¡Imagen añadida a la galería!");
-        } catch (error) {
-            alert("Error: " + error.message);
-        } finally {
+
             setCreateGalleryLoading(false);
+            setTimeout(() => alert("¡Imagen añadida a la galería!"), 10);
+        } catch (error) {
+            setCreateGalleryLoading(false);
+            console.error(error);
+            setTimeout(() => alert("Error: " + error.message), 10);
         }
     };
 

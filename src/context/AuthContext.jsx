@@ -121,16 +121,20 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = async () => {
-        if (supabase) {
-            try {
-                await withTimeout(supabase.auth.signOut());
-            } catch (error) {
-                console.warn("Logout timeout or error, forcing local cleanup:", error);
-            }
-        } else {
+        // Optimistic update: Clear user and storage immediately
+        setUser(null);
+        if (!supabase) {
             localStorage.removeItem('currentUser');
         }
-        setUser(null);
+
+        if (supabase) {
+            try {
+                // Execute sign out in background
+                await withTimeout(supabase.auth.signOut());
+            } catch (error) {
+                console.warn("Logout timeout or error (background):", error);
+            }
+        }
     };
 
     return (

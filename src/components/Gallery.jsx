@@ -91,14 +91,14 @@ const Gallery = () => {
                 </div>
 
                 {/* Thumbnails Strip */}
-                <div className="flex justify-center mt-8 gap-3 overflow-x-auto pb-4 scrollbar-hide">
+                <div className="flex justify-center mt-12 gap-4 overflow-x-auto pb-6 px-4 scrollbar-hide">
                     {photos.map((photo, index) => (
                         <button
                             key={index}
                             onClick={() => setCurrentIndex(index)}
-                            className={`relative h-20 w-32 rounded-lg overflow-hidden flex-shrink-0 transition-all duration-300 ${currentIndex === index ? 'ring-2 ring-electric-cyan scale-105' : 'opacity-50 hover:opacity-100'}`}
+                            className={`relative h-20 w-32 rounded-lg overflow-hidden flex-shrink-0 transition-all duration-300 ring-offset-2 ring-offset-deep-space-black ${currentIndex === index ? 'ring-2 ring-electric-cyan scale-110' : 'opacity-50 hover:opacity-100 hover:scale-105'}`}
                         >
-                            <img src={photo.src || photo.image} alt={photo.alt} className="w-full h-full object-contain bg-black" />
+                            <img src={photo.src || photo.image} alt={photo.alt} className="w-full h-full object-cover bg-black" />
                         </button>
                     ))}
                 </div>
