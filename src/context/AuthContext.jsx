@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { db } from '../lib/db';
 
-const TIMEOUT_MS = 10000; // 10 seconds timeout
+const TIMEOUT_MS = 30000; // 30 seconds timeout
 
 const withTimeout = (promise) => {
     return Promise.race([

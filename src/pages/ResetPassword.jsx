@@ -24,7 +24,10 @@ const ResetPassword = () => {
                 const type = hashParams.get('type');
 
                 if (accessToken && type === 'recovery') {
-                    await new Promise(resolve => setTimeout(resolve, 500));
+                    if (accessToken && type === 'recovery') {
+                        // Wait a bit longer to handle potential clock skew issues where token is "from the future"
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                    }
                 }
 
                 const { data: { session } } = await supabase.auth.getSession();
@@ -61,9 +64,9 @@ const ResetPassword = () => {
         try {
             console.log("Updating password...");
 
-            // Create timeout promise
+            // Create timeout promise - Extended to 30s to avoid premature failures
             const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error("Timeout: La operación tardó demasiado")), 10000)
+                setTimeout(() => reject(new Error("Timeout: La operación tardó demasiado")), 30000)
             );
 
             // Race between update and timeout
